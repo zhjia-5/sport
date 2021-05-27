@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模拟球体重力弹性运动</title>
+    <style>
+        .ball {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 
+            3px 10px 10px rgba(0, 0, 0, 0.3),
+            inset 26px -37px 38px 42px rgba(5, 142, 144, 0.5), 
+            inset 9px -7px 35px -11px #9cfaff, inset 28px -21px 58px 4px rgba(0, 0, 0, 0.73);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ball"><span class="shadow"></span></div>
+    <script>
+        var ball = document.getElementsByClassName('ball')[0];
+        drag(ball);
+        // 封装模拟拖拽函数
+        function drag(dom) {
+            var speedX = 0,
+                speedY = 0,
+                lastX = 0,
+                lastY = 0,
+                domX = 0,
+                domY = 0;
+            dom.onmousedown = function (e) {
+                clearInterval(this.timer);
+                var event = e || window.event,
+                    // 计算鼠标与dom左边和上边距离
+                    iLeft = event.clientX - dom.offsetLeft,
+                    iTop = event.clientY - dom.offsetTop;
+                document.onmousemove = function (e) {
+                    var event = e || window.event,
+                        //将鼠标的X,Y坐标分别去掉iLeft，iTop后作为dom的坐标值 
+                        domX = event.clientX - iLeft,
+                        domY = event.clientY - iTop;
+                    if (domX < 0) { domX = 0; }
+                    if (domY < 0) { domY = 0; }
+                    if (domX > document.documentElement.clientWidth - dom.clientWidth) {
+                        domX = document.documentElement.clientWidth - dom.clientWidth;
+                    }
+                    if (domY > document.documentElement.clientHeight - dom.clientHeight) {
+                        domY = document.documentElement.clientHeight - dom.clientHeight;
+                    }
+                    speedX = domX - lastX;
+                    speedY = domY - lastY;
+                    lastX = speedX;
+                    lastY = speedY;
+
+                    dom.style.left = domX + 'px';
+                    dom.style.top = domY + 'px';
+                }
+                document.onmouseup = function (e) {
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                    run(dom, speedX, speedY);
+                }
+            }
+        }
+
+        // 封装模拟重力碰撞函数
+        function run(dom, speedX, speedY) {
+            var g = 3,//重力加速度
+                u = 0.8,//阻力系数
+                newLeft, newTop, timer;
+            clearInterval(this.timer);
+            dom.timer = setInterval(function () {
+                speedY += g;
+                newLeft = dom.offsetLeft + speedX;
+                newTop = dom.offsetTop + speedY;
+                if (newLeft >= document.documentElement.clientWidth - dom.clientWidth) {
+                    speedX *= u;
+                    speedY *= u;
+                    speedX *= -1;
+                    newLeft = document.documentElement.clientWidth - dom.clientWidth;
+                }
+                if (newTop >= document.documentElement.clientHeight - dom.clientHeight) {
+                    speedX *= u;
+                    speedY *= u;
+                    speedY *= -1;
+                    newTop = document.documentElement.clientHeight - dom.clientHeight;
+                }
+                if (newTop <= 0) {
+                    speedX *= u;
+                    speedY *= u;
+                    speedY *= -1;
+                    newTop = 0;
+                }
+                if (newLeft <= 0) {
+                    speedX *= u;
+                    speedY *= u;
+                    speedX *= -1;
+                    newLeft = 0;
+
+                }
+                if (Math.abs(speedX) < 1) {
+                    speedX = 0;
+                }
+                if (Math.abs(speedY) < 1) {
+                    speedY = 0;
+                }
+                // 如果X Y轴速度都为0，且在地面上，则清除定时器
+                if (speedX == 0 && speedY == 0 && newTop == document.documentElement.clientHeight - dom.clientHeight) {
+                    clearInterval(dom.timer);
+                } else {
+                    dom.style.left = newLeft + 'px';
+                    dom.style.top = newTop + 'px';
+                }
+            }, 30);
+        }
+    </script>
+</body>
+
+</html>
